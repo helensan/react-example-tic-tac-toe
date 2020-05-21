@@ -1,0 +1,203 @@
+<html lang="en">
+<head>
+    <title>Tic Tac Toe</title>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: #444;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #app {
+            text-align: center;
+        }
+
+        #app button {
+            margin: 0 5px;
+        }
+
+        #msgToUser {
+            font-size: 26px;
+            margin: 10px 0;
+        }
+
+        #scoreBoard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #scoreBoard div {
+            margin: 0 20px;
+        }
+
+        #board {
+            display: flex;
+            flex-wrap: wrap;
+            border: 4px solid #444;
+            width: calc(100vmin - 200px);
+            height: calc(100vmin - 200px);
+            margin: 10px auto;
+            background: #444;
+        }
+
+        #board .tile {
+            border: 4px solid #444;
+            width: calc(100% / 3 - 8px);
+            height: calc(100% / 3 - 8px);
+            font-size: calc(100vmin / 3 - 108px);
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+    <body>
+        <h1>Tic Tac Toe</h1>
+        <div id="app"></div>
+    </body>
+</html>
+
+<script type="text/babel">
+
+    function Board(props) {
+    return (
+    <div id="board">
+        {props.list.map(function(x, index) { var value = ''; if (x == 1) { value="X" } else if (x == 2) { value="O" } return <div key={index} className="tile" onClick={() => props.onClickTile(index)}>{value}</div> } )}
+    </div>
+    )
+    }
+
+    function MessageToUser(props) {
+    if (props.activeGame) {
+    return (
+    <div id="msgToUser">Player {props.activePlayer}'s Turn</div>
+    )
+    }
+    else if (props.scoreBoard[props.scoreBoard.length - 1] != null) {
+    return (
+    <div id="msgToUser">Player {props.scoreBoard[props.scoreBoard.length - 1]} has Won this Round</div>)
+    }
+    else {
+    return (
+    <div id="msgToUser">Tie</div>)
+    }
+    }
+
+    function ScoreBoard(props) {
+    var p1Count = 0; var p2Count = 0;
+    for (var i = 0; i < props.scoreBoard.length; i++) {
+    if (props.scoreBoard[i] == 1) { p1Count++ }
+    else if (props.scoreBoard[i] == 2) { p2Count++ }
+    }
+    return (
+    <div id="scoreBoard"><div>Player 1 Score: <u>{p1Count}</u></div><div>Player 2 Score: <u>{p2Count}</u></div></div>)
+    }
+
+    class App extends React.Component {
+    constructor(props) {
+    super(props);
+    this.state = {
+    board: [null, null, null, null, null, null, null, null, null],
+    activePlayer: 1,
+    activeGame: true,
+    scoreBoard: [],
+    autoPlay: false
+    }
+    this.handleResetBoard = this.handleResetBoard.bind(this);
+    this.handleClickTile = this.handleClickTile.bind(this);
+    this.handleAutoPlay = this.handleAutoPlay.bind(this);
+    }
+
+    handleResetBoard() {
+    this.setState({ board: [null, null, null, null, null, null, null, null, null], activePlayer: 1, activeGame: true })
+    }
+
+    handleClickTile(clickedIdx) {
+    var lastPlayer = this.state.activePlayer;
+    if (this.state.board[clickedIdx] == null && this.state.activeGame) {
+    var nextPlayer = 1;
+    if (lastPlayer == 1) {
+    nextPlayer = 2;
+    }
+    this.setState((currentState) => { return {
+    board: currentState.board.map(function(x, index) { if (index == clickedIdx) { return currentState.activePlayer; } return x }),
+    activePlayer: nextPlayer
+    }
+    }, function() { this.checkWin(lastPlayer) });
+    }}
+
+    checkWin(lastPlayer) {
+    for (var i = 0; i <= 6; i+=3) {
+    if (this.state.board[i] === lastPlayer && this.state.board[i + 1] === lastPlayer && this.state.board[i + 2] === lastPlayer) {
+    return this.userWon(lastPlayer)
+    }
+    }
+    for (var i = 0; i < 3; i++) {
+    if (this.state.board[i] === lastPlayer && this.state.board[i + 3] === lastPlayer && this.state.board[i + 6] === lastPlayer) {
+    return this.userWon(lastPlayer)
+    }
+    }
+    if (this.state.board[0] === lastPlayer && this.state.board[4] === lastPlayer && this.state.board[8] === lastPlayer) {
+    return this.userWon(lastPlayer)
+    }
+    if (this.state.board[2] === lastPlayer && this.state.board[4] === lastPlayer && this.state.board[6] === lastPlayer) {
+    return this.userWon(lastPlayer)
+    }
+    var allTilesFilled = true;
+    for (var i = 0; i < 9; i++) {
+    if (this.state.board[i] === null) {
+    allTilesFilled = false
+    }
+    }
+    if (allTilesFilled) {
+    return this.userWon(null);
+    }
+    }
+
+    userWon(player) {
+    if (this.interval != null) {
+    window.clearInterval(this.interval);
+    }
+    var newScoreBoard = this.state.scoreBoard;
+    newScoreBoard.push(player);
+    this.setState({ activeGame: false, scoreBoard: newScoreBoard, autoPlay: false })
+    }
+
+    handleAutoPlay() {
+    if (this.state.autoPlay) {
+    return;
+    }
+    this.setState({ autoPlay: true });
+    if (this.state.activeGame == false) {
+    this.handleResetBoard();
+    }
+    this.interval = window.setInterval(() => {
+    var random = Math.floor(Math.random() * Math.floor(9));
+    while (this.state.board[random] != null) { random = Math.floor(Math.random() * Math.floor(9)) }
+    this.handleClickTile(random);
+    }, 50)
+    }
+
+    render() {
+    return (
+    <div>
+        <button onClick={this.handleResetBoard}>Reset</button>
+        <button onClick={this.handleAutoPlay}>Auto Play</button>
+        <MessageToUser activePlayer={this.state.activePlayer} activeGame={this.state.activeGame} scoreBoard={this.state.scoreBoard} />
+        <ScoreBoard scoreBoard={this.state.scoreBoard} />
+        <Board list={this.state.board} onClickTile={this.handleClickTile} />
+    </div>
+    );
+    }
+    }
+
+    ReactDOM.render(
+    <App />, document.getElementById('app'));
+</script>
