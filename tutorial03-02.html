@@ -1,0 +1,36 @@
+class App extends React.Component {
+  constructor(props) {
+  super(props);
+  this.state = {
+    board: [null, null, null, null, null, null, null, null, null],
+    activePlayer: 1,
+    activeGame: true,
+    scoreBoard: [],
+    autoPlay: false
+  }
+  
+  this.handleResetBoard = this.handleResetBoard.bind(this);
+  
+  handleResetBoard() {
+    this.setState({ board: [null, null, null, null, null, null, null, null, null], activePlayer: 1, activeGame: true })
+  }
+  
+  render() {
+    return (
+        <div>
+            <button onClick={this.handleResetBoard}>Reset</button>
+            <Board list={this.state.board} />
+        </div>
+    );
+  }
+ }
+ 
+function Board(props) {
+  return (
+        <div id="board">
+            {props.list.map(function(x, index) { var value = ''; if (x == 1) { value="X" } else if (x == 2) { value="O" } return <div key={index} className="tile" onClick={() => props.onClickTile(index)}>{value}</div> } )}
+        </div>
+  )
+}
+        
+     
